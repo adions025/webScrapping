@@ -1,18 +1,31 @@
 '''
-
 Tipologia  y ciclo de la vida de los datos
 
+@Author: Adonis Gonzalez Godoy y Eduard Tremps
+----------------------------------------------
 '''
+
 import requests
 import logging
 from bs4 import BeautifulSoup
 import re
 import json
-import csv
-
 
 class Scrapping:
+    """"Clase Scrapping, contiene los metodos necesarios
+        para la extracción de datos del estudio de mareas
+        a lo largo de la vida fluvial. Esta clase permite
+        la configuración del header, de los componentes
+        de selección de la página como selectOptions, se
+        encarga de devolver el objeto beautiful soup con
+        los datos sin los tags html. Y permite guardar
+        los datos en formato .CSV.
+    """
     def __init__(self, url):
+        """"Constructor, necesita una url, para crearse
+            el objeto scrapping, se definen las variables
+            y las estructras que se usaran.
+        """
         self.__url = url
         self.__contentType = None
         self.__requestType = None
@@ -24,6 +37,10 @@ class Scrapping:
         self.__logger = logging.getLogger()
 
     def get_BeautifulSoup(self):
+        """"Realiza la request a la url, con los dos mapas
+            necesarios, el header y la informacion del
+            comboselected. Devuelve un objeto Beatifulsoup.
+        """
         if not self.__formCombo:
             self.__logger.warning('No data in combo selection')
             return None
@@ -32,15 +49,29 @@ class Scrapping:
             return BeautifulSoup(x.text, 'html.parser')
 
     def set_ContentType(self, contentType):
+        """"Configura el tipo contenido para las solicitudes
+            HTTP que los navegadores deben soportar en el
+            header.
+        """
         self.__contentType = contentType
 
     def set_ResquestType(self, requesType):
+        """"Configura el objeto para solicitar datos de un
+            servidor web.
+            :param requesType
+        """
         self.__requestType = requesType
 
     def set_Response(self, response):
+        """Configura la url que devolvera los datos.
+           :param response
+        """
         self.__response = response
 
     def fill_Header(self):
+        """Configura  estructura tipo map {} del encabezado
+           de la solicutud HTTP.
+        """
         self.__header['Origin'] = self.__url
         self.__header['Content-Type'] = self.__contentType
         self.__header['X-Requested-With'] = self.__requestType
@@ -48,81 +79,103 @@ class Scrapping:
         return self.__header
 
     def set_SelectCombo(self, place, month):
+        """Configura la estructura tipo map {} del combo
+           de la pagina web.
+           :param place
+           :param month
+        """
         self.__localidad = place
         self.__fMes = month
         self.__formCombo['Localidad'] = self.__localidad
         self.__formCombo['FMes'] = self.__fMes
 
     def get_SelectCombo(self):
+        """Devuelve la estructura tipo map {} del combo
+           de la pagina web.
+        """
         self.__formCombo['Localidad'] = self.__localidad
         self.__formCombo['FMes'] = self.__fMes
         return self.__formCombo
 
     def save_AsMap(self, path, map):
+        """Guarda los datos en formato JSON, a partir de un
+           diccionario compuesto por los datos, en el path
+           especificado.
+           :param path
+           :param map
+        """
         with open(path + '/' + "dataset.json", "w") as outfile:
-            # outfile.write(str(map))
             json.dump(map, outfile)
-            print("File was saved in: ", path)
-        print('saving')
 
-    def save_AsCSV(self, path, map):
+    def save_AsCSV(self, path, map, month, stats):
+        """Guarda los datos en formato CSV, a partir de un
+           diccionario compuesto por los datos, en el path
+           especificado.
+           :param path
+           :param map
+           :param month
+           :param stats
+        """
         with open(path + '/' + "dataset.csv", "a") as outfile:
-            outfile.write(str('dia')+' '+str('h:m')+' '+str('altura')+' '+str('h:m')+' '+str('altura')
+            outfile.write(str('mes'+':'+month)+' '+str('h:m')+' '+str('altura')+' '+str('h:m')+' '+str('altura')
                           +' '+str('h:m')+' '+str('altura')+' '+str('h:m')+' '+str('altura'))
+            outfile.write("\n")
+            outfile.write("estadisticas"+" "+str('pleamar-maxima')+ " "+str('pleamar-media')+" "+str('bajamar-baja')
+                          +" "+str('bajamar-media')+" "+str('ampl-maxima')+" "+str('ampl-media'))
+            outfile.write("\n")
+            outfile.write(" "+re.sub('[^A-Za-z0-9-:.]+', " ", str(stats)))
             outfile.write("\n")
             for i in map:
                 a = (str(i) + str(re.sub('[^A-Za-z0-9-:.]+', " ", str(map[i]))))
                 outfile.write(a.replace(" : ", " "))
                 outfile.write("\n")
+            outfile.write("\n")
 
     def get_ValuesMap(self, data):
-        time, height, days, listValues = [], [], [], []
+        """Devuelve un map con los datos mejor organizados
+           para guardarlos de la forma adecuada.
+           :param data
+         """
+        listValues, all = [], []
+        a, result = {}, {}
 
         for row in data.find_all('tr'):
             for x in row.find_all('td'):
                 listValues.append(re.sub("[^A-Za-z0-9-:.]+", "", str(x.string)))
 
         for i in listValues:
+            if (i == " "):
+                listValues.remove(i)
+
+        for i in listValues:
             if (len(i) == 2):
-                days.append(i)
-            if (len(i) == 4):
-                height.append(i)
-            if (len(i) == 5):
-                time.append(i)
+                value = i
+                all = []
+            else:
+                all.append(i)
+                a[value] = all
+                result.update(a)
+        return result
 
-        return self.create_Map(time, height, days)
-
-    def create_Map(self, time, height, days):
-        a, b = {}, {}
-        counter = 0
-        index = 0
-        dias = 1
-        for i in days:
-            for j in time:
-                if (days.index(i) % 4 == 0):
-                    a = ({str(time[counter]): str(height[counter])})
-                    b.update(a.copy())
-                    counter += 1
-            break
-
-        g, mapResult, t = {}, {}, {}
-        for key in b:
-            if (index < 4):
-                g = {key: b[key]}
-                t.update(g)
-                index += 1
-
-            if (index == 4):
-                mapResult[str(dias)] = t.copy()
-                g.clear()
-                t.clear()
-                dias += 1
-                index = 0
-
-        return mapResult
+    def get_StatsList(self, table):
+        """Devuelve una lista limpia a partir de los de las tablas
+           de estadisticas HTML.
+           :param table
+         """
+        for row in table.findAll("tr"):
+            cells = row.findAll("td")
+            if len(cells) == 6:
+                pleamarMax = cells[0].find(text=True)
+                pleamarMed = cells[1].find(text=True)
+                bajamarBaj = cells[2].find(text=True)
+                bajamarMed = cells[3].find(text=True)
+                amplitudMax = cells[4].find(text=True)
+                amplitudMed = cells[5].find(text=True)
+        resultHeader = [pleamarMax, pleamarMed, bajamarBaj, bajamarMed, amplitudMax, amplitudMed]
+        return resultHeader
 
     def set_URL(self, url):
+        """Configura la url
+           :param url
+         """
         self.__url = url
-
-    def get_URL(self):
-        return self.__url

@@ -1,36 +1,31 @@
+'''
+
+Tipologia  y ciclo de la vida de los datos
+
+@Author: Adonis Gonzalez Godoy y Eduard Tremps
+------------------------------------------------
+
+'''
+
 from src.scrapping import Scrapping
 import os
 import sys
 import argparse
-import json
-import pandas as pd
 
-########################################################################
-#                           PATH SETTINGS
-########################################################################
+#configuración de paths
 ROOT_DIR = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(ROOT_DIR)
 resources = os.path.join(ROOT_DIR, "../res")
-'''
-def get_StatsList(table):
-    for row in table.findAll("tr"):
-        cells = row.findAll("td")
-        if len(cells) == 6:
-            pleamarMax = cells[0].find(text=True)
-            pleamarMed = cells[1].find(text=True)
-            bajamarBaj = cells[2].find(text=True)
-            bajamarMed = cells[3].find(text=True)
-            amplitudMax = cells[4].find(text=True)
-            amplitudMed = cells[5].find(text=True)
-    resultHeader = [pleamarMax, pleamarMed, bajamarBaj, bajamarMed, amplitudMax, amplitudMed]
-    return resultHeader
-'''
 
-########################################################################
-#                               MAIN
-########################################################################
+#argument default
+location = 'ATAL'
+
 if __name__ == '__main__':
-    location = 'BB'
+    """"Funcion principal del programa, necesita como
+        argumento el puerto del cual se quiere extraer
+        la informacion. Los puertos se los identifica 
+        por sus siglas.
+     """
     parser = argparse.ArgumentParser(description='_Set Harbour to get data_')
     parser.add_argument('--location', required=True,
                         default=location,
@@ -56,26 +51,18 @@ if __name__ == '__main__':
             harbor.append(item.get('value'))
 
     scrap.set_Response('http://www.hidro.gob.ar/oceanografia/Tmareas/RE_Mareas.asp')
-    month = ['01', '02']
     for i in month:
         scrap.set_SelectCombo('ATAL', i)
-        #print ("====="*10)
         result = scrap.get_BeautifulSoup()
-        #table = result.find('table')
-        #resultList = get_StatsList(table)
-        #print(resultList)
+
+        table = result.find('table')
+        stats = scrap.get_StatsList(table)
+
         data = result.find_all('div', attrs={'class': 'row panels-row'})[0]
         map = scrap.get_ValuesMap(data)
-        scrap.save_AsCSV(resources, map)
+        scrap.save_AsCSV(resources, map, i, stats)
 
-    #parsed = json.loads('\"' + str(map) + '\"')
-    #scrap.save_AsMap(resources, parsed)
-    #frame = pd.DataFrame.from_dict(map, orient='index')
-    #frame.reset_index(level=0, inplace=True)
-    #frame.set_index(["day"], inplace=True, append=True, drop=True)
-    #frame.reset_index(level=3, inplace=True)
 
-    #print(map)
 
 
 
