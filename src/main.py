@@ -3,6 +3,7 @@ import os
 import sys
 import argparse
 import json
+import pandas as pd
 
 ########################################################################
 #                           PATH SETTINGS
@@ -55,7 +56,7 @@ if __name__ == '__main__':
             harbor.append(item.get('value'))
 
     scrap.set_Response('http://www.hidro.gob.ar/oceanografia/Tmareas/RE_Mareas.asp')
-    month = ['01']
+    month = ['01', '02']
     for i in month:
         scrap.set_SelectCombo('ATAL', i)
         #print ("====="*10)
@@ -65,8 +66,16 @@ if __name__ == '__main__':
         #print(resultList)
         data = result.find_all('div', attrs={'class': 'row panels-row'})[0]
         map = scrap.get_ValuesMap(data)
+        scrap.save_AsCSV(resources, map)
 
-    parsed = json.loads('\"' + str(map) + '\"')
-    scrap.save_AsMap(resources, parsed)
+    #parsed = json.loads('\"' + str(map) + '\"')
+    #scrap.save_AsMap(resources, parsed)
+    #frame = pd.DataFrame.from_dict(map, orient='index')
+    #frame.reset_index(level=0, inplace=True)
+    #frame.set_index(["day"], inplace=True, append=True, drop=True)
+    #frame.reset_index(level=3, inplace=True)
+
+    #print(map)
+
 
 

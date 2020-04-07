@@ -8,6 +8,7 @@ import logging
 from bs4 import BeautifulSoup
 import re
 import json
+import csv
 
 
 class Scrapping:
@@ -64,19 +65,29 @@ class Scrapping:
             print("File was saved in: ", path)
         print('saving')
 
+    def save_AsCSV(self, path, map):
+        with open(path + '/' + "dataset.csv", "a") as outfile:
+            outfile.write(str('dia')+' '+str('h:m')+' '+str('altura')+' '+str('h:m')+' '+str('altura')
+                          +' '+str('h:m')+' '+str('altura')+' '+str('h:m')+' '+str('altura'))
+            outfile.write("\n")
+            for i in map:
+                a = (str(i) + str(re.sub('[^A-Za-z0-9-:.]+', " ", str(map[i]))))
+                outfile.write(a.replace(" : ", " "))
+                outfile.write("\n")
+
     def get_ValuesMap(self, data):
         time, height, days, listValues = [], [], [], []
 
         for row in data.find_all('tr'):
             for x in row.find_all('td'):
-                listValues.append(re.sub('[^A-Za-z0-9]+', "", str(x.string)))
+                listValues.append(re.sub("[^A-Za-z0-9-:.]+", "", str(x.string)))
 
         for i in listValues:
             if (len(i) == 2):
                 days.append(i)
-            if (len(i) == 3):
-                height.append(i)
             if (len(i) == 4):
+                height.append(i)
+            if (len(i) == 5):
                 time.append(i)
 
         return self.create_Map(time, height, days)
