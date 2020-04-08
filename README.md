@@ -1,5 +1,5 @@
-# webScrapping
-Extracción de datos del estudio de mareas a lo largo de la vida fluvial.
+# webScrapping (PEC2)
+Extracción de datos para el estudio de mareas a lo largo de la vía fluvial.
 
 ## Requirements
 * Python 3.6
