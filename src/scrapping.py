@@ -17,6 +17,7 @@ import logging
 from bs4 import BeautifulSoup
 import re
 import json
+import time
 
 class Scrapping:
     """"Clase Scrapping, contiene los metodos necesarios
@@ -28,6 +29,7 @@ class Scrapping:
         los datos sin los tags html. Y permite guardar
         los datos en formato .CSV.
     """
+
     def __init__(self, url):
         """"Constructor, necesita una url, para crearse
             el objeto scrapping, se definen las variables
@@ -35,10 +37,11 @@ class Scrapping:
         """
         self.__url = url
         self.__contentType = None
-        self.__requestType = None
+        self.__userAgent = None
         self.__response = None
         self.__localidad = None
         self.__fMes = None
+        self.__delayRequest = None
         self.__header = {}
         self.__formCombo = {}
         self.__logger = logging.getLogger()
@@ -52,7 +55,9 @@ class Scrapping:
             self.__logger.warning('No data in combo selection')
             return None
         else:
-            x = requests.post(self.__response, data=self.__formCombo, headers=self.__header)
+            start_time = time.time()
+            x = requests.get(self.__response, data=self.__formCombo, headers=self.__header)
+            self.calc_DelayRequest(start_time)
             return BeautifulSoup(x.text, 'html.parser')
 
     def set_ContentType(self, contentType):
@@ -62,12 +67,12 @@ class Scrapping:
         """
         self.__contentType = contentType
 
-    def set_ResquestType(self, requesType):
+    def set_UserAgent(self, userAgent):
         """"Configura el objeto para solicitar datos de un
             servidor web.
-            :param requesType
+            :param userAgent
         """
-        self.__requestType = requesType
+        self.__userAgent = userAgent
 
     def set_Response(self, response):
         """Configura la url que devolvera los datos.
@@ -79,10 +84,8 @@ class Scrapping:
         """Configura  estructura tipo map {} del encabezado
            de la solicutud HTTP.
         """
-        self.__header['Origin'] = self.__url
         self.__header['Content-Type'] = self.__contentType
-        self.__header['X-Requested-With'] = self.__requestType
-        self.__header['x-elastica_gw'] = '2.43.0'
+        self.__header['User-Agent'] = self.__userAgent
         return self.__header
 
     def set_SelectCombo(self, place, month):
@@ -142,7 +145,7 @@ class Scrapping:
         """Devuelve un map con los datos mejor organizados
            para guardarlos de la forma adecuada.
            :param data
-         """
+        """
         listValues, all = [], []
         a, result = {}, {}
 
@@ -165,10 +168,10 @@ class Scrapping:
         return result
 
     def get_StatsList(self, table):
-        """Devuelve una lista limpia a partir de los de las tablas
-           de estadisticas HTML.
+        """Devuelve una lista limpia a partir de los de las
+           tablas de estadisticas HTML.
            :param table
-         """
+        """
         for row in table.findAll("tr"):
             cells = row.findAll("td")
             if len(cells) == 6:
@@ -181,8 +184,57 @@ class Scrapping:
         resultHeader = [pleamarMax, pleamarMed, bajamarBaj, bajamarMed, amplitudMax, amplitudMed]
         return resultHeader
 
+    def is_RobotsFile(self):
+        """Comprueba si contiene el fichero robots.txt en la
+           raiz.
+        """
+        response = requests.get(self.__url+"/robots.txt").status_code
+        if (str(response) == "200"):
+            contains = True
+        else:
+            contains = False
+            self.__logger.warning("No contiene robots.txt")
+        return contains
+
+    def check_RobotsFile(self):
+        """Devuelve el contenido del fichero robots.txt.
+           No hace falta pasarlo a beatiful object ya que
+           es un fichero txt.
+        """
+        response = requests.get(self.__url+"/robots.txt")
+        return response.text
+
+    def get_Disallowed(self):
+        """Devuelve un map con el contenido desabilitado
+           del fichero robots.txt.
+        """
+        resultMap = {"Disallowed": []}
+        result = self.check_RobotsFile()
+        for i in result.split("\n"):
+            if i.startswith('Disallow'):
+                resultMap["Disallowed"].append(i.split(': ')[1].split(' ')[0])
+        return resultMap
+
+    def calc_DelayRequest(self, startTimeRequest):
+        """Se calcula el tiempo en que tarda en completar
+           la request y se añade un valor proporcional al
+           50% adicional de lo que tarda la peticion.
+           Este valor puede ser modificado
+           :param startTimeRequest
+        """
+        endTimeRequest = time.time() - startTimeRequest
+        tmpTime = endTimeRequest * 0.5
+        endTimeRequest = endTimeRequest + tmpTime
+        self.__delayRequest = endTimeRequest
+
+    def get_DelayRequest(self):
+        """Devuelve el tiempo de retardo de la request
+           que debe tomar entre peticiones masivas.
+        """
+        return self.__delayRequest
+
     def set_URL(self, url):
         """Configura la url
            :param url
-         """
+        """
         self.__url = url
