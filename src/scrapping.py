@@ -3,6 +3,13 @@ Tipologia  y ciclo de la vida de los datos
 
 @Author: Adonis Gonzalez Godoy y Eduard Tremps
 ----------------------------------------------
+
+usage:
+$python main.py [--h] [--location]
+
+argumentos opcionales
+--h: ayuda
+--location: nombre del puerto
 '''
 
 import requests
