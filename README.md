@@ -63,7 +63,7 @@ Documento pdf con las respuestas y tabla de contribución.
 
 En la wiki se describe con detalles el dataset.
 
-+ [Wiki Github](https://github.com/adions025/webScrapping.wiki.git)
++ [Wiki Github](https://github.com/adions025/webScrapping/wiki)
 
 ## Authors
 
