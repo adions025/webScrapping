@@ -33,6 +33,7 @@ Lista completa de puertos:
 ```
 
 ## Content
+
 + **src/scrapping.py**
 
 Clase Scrapping, contiene los métodos necesarios para la extracción de datos del estudio de mareas a lo largo de la vida 
@@ -53,6 +54,16 @@ Contiene los user-agents que seran incoportados de manera aleatoria en el header
 + **res/dataset.csv**
 
 Es el dataset resultado en formado csv.
+
++ **mareas.pdf**
+
+Documento pdf con las respuestas y tabla de contribución.
+
+# Wiki
+
+En la wiki se describe con detalles el dataset.
+
++ [Wiki Github](https://github.com/adions025/webScrapping.wiki.git)
 
 ## Authors
 
