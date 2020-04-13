@@ -32,8 +32,27 @@ Lista completa de puertos:
 'SCLE', 'SANF', 'STER']
 ```
 
-## License
-* 
+## Content
++ **src/scrapping.py**
+
+Clase Scrapping, contiene los métodos necesarios para la extracción de datos del estudio de mareas a lo largo de la vida 
+fluvial. Esta clase permite la configuración del header, de los componentes de selección de la página como 
+selectOptions, se encarga de devolver el objeto beautiful soup con los datos sin los tags html,  calcular el tiempo en 
+que tarda en completar  la request y añadir un valor proporcional. Y permite guardar
+los datos en formato .CSV.
+
++ **src/main.py**
+
+Funcion principal del programa, necesita como argumento el puerto del cual se quiere extraer la informacion. Los puertos
+se los identifica por sus siglas.
+
++ **src/agents.py**
+
+Contiene los user-agents que seran incoportados de manera aleatoria en el header de la request.
+
++ **res/dataset.csv**
+
+Es el dataset resultado en formado csv.
 
 ## Authors
 

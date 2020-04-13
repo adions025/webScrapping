@@ -72,18 +72,18 @@ if __name__ == '__main__':
 
         scrap.set_Response('http://www.hidro.gob.ar/oceanografia/Tmareas/RE_Mareas.asp')
         user_agent = Agents()
-        user_agent_list = user_agent.get_UserAgentList()
-        for i in month:
-            scrap.set_SelectCombo(args.location, i)
-            scrap.set_UserAgent(random.choice(user_agent_list))
-            scrap.fill_Header()
-            time.sleep(scrap.get_DelayRequest())
-            result = scrap.get_BeautifulSoup()
-            table = result.find('table')
-            stats = scrap.get_StatsList(table)
-            data = result.find_all('div', attrs={'class': 'row panels-row'})[0]
-            map = scrap.get_ValuesMap(data)
-            scrap.save_AsCSV(resources, map, i, stats)
+        for j in harbor:#iteramos todos los puertos
+            for i in month:# y todos los meses del año
+                scrap.set_SelectCombo(j, i)
+                scrap.set_UserAgent(random.choice(user_agent.get_UserAgentList()))
+                scrap.fill_Header()
+                time.sleep(scrap.get_DelayRequest())
+                result = scrap.get_BeautifulSoup()
+                table = result.find('table')
+                stats = scrap.get_StatsList(table)
+                data = result.find_all('div', attrs={'class': 'row panels-row'})[0]
+                map = scrap.get_ValuesMap(data)
+                scrap.save_AsCSV(resources, map, i, stats, j)
 
 
 

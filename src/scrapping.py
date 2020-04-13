@@ -56,7 +56,7 @@ class Scrapping:
             return None
         else:
             start_time = time.time()
-            x = requests.get(self.__response, data=self.__formCombo, headers=self.__header)
+            x = requests.post(self.__response, data=self.__formCombo, headers=self.__header)
             self.calc_DelayRequest(start_time)
             return BeautifulSoup(x.text, 'html.parser')
 
@@ -117,7 +117,7 @@ class Scrapping:
         with open(path + '/' + "dataset.json", "w") as outfile:
             json.dump(map, outfile)
 
-    def save_AsCSV(self, path, map, month, stats):
+    def save_AsCSV(self, path, map, month, stats, location):
         """Guarda los datos en formato CSV, a partir de un
            diccionario compuesto por los datos, en el path
            especificado.
@@ -125,20 +125,23 @@ class Scrapping:
            :param map
            :param month
            :param stats
+           :param location
         """
         with open(path + '/' + "dataset.csv", "a") as outfile:
-            outfile.write(str('mes'+':'+month)+' '+str('h:m')+' '+str('altura')+' '+str('h:m')+' '+str('altura')
-                          +' '+str('h:m')+' '+str('altura')+' '+str('h:m')+' '+str('altura'))
-            outfile.write("\n")
-            outfile.write("estadisticas"+" "+str('pleamar-maxima')+ " "+str('pleamar-media')+" "+str('bajamar-baja')
-                          +" "+str('bajamar-media')+" "+str('ampl-maxima')+" "+str('ampl-media'))
-            outfile.write("\n")
-            outfile.write(" "+re.sub('[^A-Za-z0-9-:.]+', " ", str(stats)))
+            outfile.write(str("Puerto")+","+str('Mes')+','+str('Dia')+","+str('hh:mm')+','+str('Altura')+','+
+                          str('hh:mm')+','+str('Altura')+','+str('hh:mm')+','+str('Altura')+','+str('hh:mm')+','+
+                          str('Altura'))
             outfile.write("\n")
             for i in map:
-                a = (str(i) + str(re.sub('[^A-Za-z0-9-:.]+', " ", str(map[i]))))
-                outfile.write(a.replace(" : ", " "))
+                a = (str(i)+ str(re.sub('[^A-Za-z0-9-:.]+', " ", str(map[i]))))
+                a = a.replace(" ", ",")
+                a.replace(" : ", ",")
+                outfile.write(location+","+month+","+a[:-1])
                 outfile.write("\n")
+            outfile.write("Estadisticas"+","+str('Pleamar-maxima')+ ","+str('Pleamar-media')+","+str('Bajamar-baja')
+                          +","+str('Bajamar-media')+","+str('Ampl-maxima')+","+str('Ampl-media'))
+            outfile.write("\n")
+            outfile.write(re.sub('[^A-Za-z0-9-:.]+', ",", str(stats)))
             outfile.write("\n")
 
     def get_ValuesMap(self, data):
